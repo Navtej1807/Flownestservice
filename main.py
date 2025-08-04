@@ -1,39 +1,40 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import requests
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import os
+import requests
 
 app = FastAPI()
 
-class QueryRequest(BaseModel):
-    query: str
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Get API Key from Environment Variable
-OPENROUTER_API_KEY = os.getenv("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")
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-headers = {
-    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-    "Content-Type": "application/json"
-}
-
-@app.post("/tune")
-def tune_sql(request: QueryRequest):
-    prompt = f"""You are an expert SQL Performance Engineer. Optimize the following SQL query for better performance and provide only the optimized query in your response:\n\n{request.query}"""
-
-    payload = {
+@app.post("/optimize")
+async def optimize_sql(payload: dict):
+    query = payload.get("query")
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [
-            {"role": "user", "content": prompt}
+            {"role": "system", "content": "You are an expert SQL query optimizer. You will receive SQL queries and return optimized versions of them with explanation."},
+            {"role": "user", "content": f"Optimize this SQL query: {query}"}
         ]
     }
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+    result = response.json()
+    optimized_response = result['choices'][0]['message']['content']
+    return {"optimized_query": optimized_response}
 
-    response = requests.post(OPENROUTER_API_URL, headers=headers, json=payload)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to get optimized query from OpenRouter.")
-
-    data = response.json()
-    optimized_query = data['choices'][0]['message']['content']
-
-    return {"optimized_query": optimized_query}
+@app.get("/")
+def read_root():
+    return {"message": "Flownest SQL Tuner API is running"}
