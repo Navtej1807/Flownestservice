@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FlownestAI - SQL Tuner</title>
+</head>
+<body>
+  <h1>SQL Query Optimizer</h1>
+  <textarea id="queryInput" rows="6" cols="60" placeholder="Enter your SQL query here..."></textarea><br><br>
+  <button onclick="submitQuery()">Optimize Query</button>
+
+  <h3>Optimized Query:</h3>
+  <pre id="optimizedOutput"></pre>
+
+  <script>
+    async function submitQuery() {
+      const query = document.getElementById('queryInput').value;
+      const output = document.getElementById('optimizedOutput');
+      output.textContent = 'Optimizing... Please wait.';
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/tune', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          output.textContent = `Error: ${errorData.detail}`;
+          return;
+        }
+
+        const data = await response.json();
+        output.textContent = data.optimized_query;
+      } catch (error) {
+        output.textContent = 'An error occurred: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
