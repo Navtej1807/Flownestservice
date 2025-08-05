@@ -11,8 +11,8 @@ class QueryInput(BaseModel):
 @app.post("/tune-sql")
 def tune_sql(query_input: QueryInput):
     api_key = os.getenv("OPENROUTER_API_KEY")
-    if not API_KEY:
-    raise ValueError("API Key not found. Set OPENROUTER_API_KEY as environment variable.")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="API Key not found")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
