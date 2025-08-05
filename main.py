@@ -1,11 +1,14 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
+import requests
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,27 +17,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+class SQLQuery(BaseModel):
+    query: str
 
-@app.post("/optimize")
-async def optimize_sql(payload: dict):
-    query = payload.get("query")
+@app.post("/optimize-sql")
+def optimize_sql(query: SQLQuery):
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        return {"error": "API key not found in environment variables"}
+
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     data = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [
-            {"role": "system", "content": "You are an expert SQL query optimizer. You will receive SQL queries and return optimized versions of them with explanation."},
-            {"role": "user", "content": f"Optimize this SQL query: {query}"}
+            {
+                "role": "system",
+                "content": "You are an AI SQL expert. Optimize SQL queries."
+            },
+            {
+                "role": "user",
+                "content": f"Optimize this SQL query and explain briefly: {query.query}"
+            }
         ]
     }
     response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
-    result = response.json()
-    optimized_response = result['choices'][0]['message']['content']
-    return {"optimized_query": optimized_response}
 
-@app.get("/")
-def read_root():
-    return {"message": "Flownest SQL Tuner API is running"}
+    if response.status_code != 200:
+        return {"error": f"Failed to get response: {response.text}"}
+
+    result = response.json()
+    reply = result['choices'][0]['message']['content']
+    return {"optimized_query": reply}
