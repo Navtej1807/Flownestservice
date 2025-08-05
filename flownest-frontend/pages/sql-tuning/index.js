@@ -11,7 +11,8 @@ export default function SqlTuning() {
     setLoading(true);
 
     try {
-      const response = await axios.post('https://flownestservice.onrender.com/tune', { query });
+      const response = await axios.post('https://flownest-sql-tuner.onrender.com/optimize', { query });
+
 
       setResponse(res.data);
     } catch (error) {
