@@ -1,6 +1,8 @@
 
 from fastapi import APIRouter, Request, HTTPException
-from models.user_usage import get_usage_stats
+# ✅ Correct:
+from app.models.user_usage import get_usage_stats
+
 
 router = APIRouter()
 
