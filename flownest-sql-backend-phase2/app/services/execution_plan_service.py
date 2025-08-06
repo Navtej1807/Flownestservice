@@ -1,9 +1,12 @@
+# app/services/execution_plan_service.py
+
 import os
 import httpx
+import json
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-async def generate_execution_plan(input_query: str) -> dict:
+async def analyze_execution_plan(input_query: str) -> dict:
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
@@ -45,8 +48,6 @@ Provide the response in the following JSON format:
     # Extract model response
     message_content = result["choices"][0]["message"]["content"]
 
-    # Parse JSON response
-    import json
     try:
         response_dict = json.loads(message_content)
     except json.JSONDecodeError:
