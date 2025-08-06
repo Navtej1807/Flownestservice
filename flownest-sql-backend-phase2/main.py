@@ -4,68 +4,53 @@ import os
 import httpx
 from dotenv import load_dotenv
 
-# Load .env file in local dev (ignored in production on Render)
 load_dotenv()
 
-app = FastAPI(title="Flownest SQL Optimizer", version="2.0")
+app = FastAPI()
 
-# Fetch API Keys from environment
+# Request Models
+class SQLQuery(BaseModel):
+    query: str
+
+class ExecutionPlan(BaseModel):
+    plan: str
+
+class SchemaDesign(BaseModel):
+    schema: str
+
+# Environment Vars
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 ENTERPRISE_OPTIMIZER_API = os.getenv("ENTERPRISE_OPTIMIZER_API")
 
 if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY not set in environment.")
+    raise ValueError("OPENROUTER_API_KEY not found in environment variables.")
 
-# === Request & Response Models ===
-class SQLRequest(BaseModel):
-    query: str
-
-class PlanRequest(BaseModel):
-    execution_plan: str
-
-class SchemaRequest(BaseModel):
-    schema_design: str
-
-# === Endpoints ===
-
-@app.get("/")
-def root():
-    return {"message": "Flownest SQL Optimizer API"}
-
+# SQL Tuning Endpoint
 @app.post("/tune-sql")
-async def tune_sql(req: SQLRequest):
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
+async def tune_sql(data: SQLQuery):
+    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
     payload = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [
-            {"role": "system", "content": "You are a SQL query optimization assistant."},
-            {"role": "user", "content": f"Optimize this SQL query:\n{req.query}"}
+            {"role": "system", "content": "You are an expert SQL performance tuner."},
+            {"role": "user", "content": f"Optimize this SQL query:\n{data.query}"}
         ]
     }
-
     async with httpx.AsyncClient() as client:
         response = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
         if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to optimize query via OpenRouter API")
-        data = response.json()
-        return {"optimized_query": data["choices"][0]["message"]["content"]}
+            raise HTTPException(status_code=500, detail="SQL Tuning API call failed.")
+        result = response.json()
+        return {"optimized_query": result['choices'][0]['message']['content']}
 
+# Execution Plan Analyzer
 @app.post("/analyze-plan")
-async def analyze_execution_plan(req: PlanRequest):
-    if not ENTERPRISE_OPTIMIZER_API:
-        raise HTTPException(status_code=403, detail="Enterprise API Key not configured for Execution Plan Analyzer")
+async def analyze_execution_plan(data: ExecutionPlan):
+    # Placeholder logic — Replace with actual analyzer logic/API
+    return {"analysis": f"Execution Plan Analysis for given plan:\n{data.plan}"}
 
-    # Dummy Logic (Replace with actual API call or custom analysis)
-    return {"analysis": f"Execution Plan Analysis of: {req.execution_plan}"}
-
+# Schema Design Optimizer
 @app.post("/optimize-schema")
-async def optimize_schema(req: SchemaRequest):
-    if not ENTERPRISE_OPTIMIZER_API:
-        raise HTTPException(status_code=403, detail="Enterprise API Key not configured for Schema Optimizer")
-
-    # Dummy Logic (Replace with actual API call or custom optimization)
-    return {"optimized_schema": f"Optimized Schema Design for: {req.schema_design}"}
-
+async def optimize_schema(data: SchemaDesign):
+    # Placeholder logic — Replace with actual optimizer logic/API
+    return {"optimized_schema": f"Optimized schema design for:\n{data.schema}"}
