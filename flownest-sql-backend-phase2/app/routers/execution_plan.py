@@ -1,18 +1,17 @@
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services.execution_plan_service import analyze_execution_plan
 
+from app.services.execution_plan_service import analyze_execution_plan  # ✅ Correct Path
 
 router = APIRouter()
 
-class ExecutionPlanRequest(BaseModel):
-    plan_text: str
+class SQLQuery(BaseModel):
+    query: str
 
-@router.post("/analyze-plan")
-def analyze_plan(request: ExecutionPlanRequest):
+@router.post("/")
+async def execution_plan(query: SQLQuery):
     try:
-        result = analyze_execution_plan(request.plan_text)
-        return {"analysis": result}
+        plan = await analyze_execution_plan(query.query)
+        return plan
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

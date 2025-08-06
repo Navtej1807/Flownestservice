@@ -1,17 +1,17 @@
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.schema_optimizer_service import optimize_schema
+
+from app.services.schema_optimizer_service import optimize_schema  # ✅ Correct Path
 
 router = APIRouter()
 
 class SchemaRequest(BaseModel):
-    schema_text: str
+    schema_details: str
 
-@router.post("/optimize-schema")
-def optimize_schema_route(request: SchemaRequest):
+@router.post("/")
+async def schema_optimizer(request: SchemaRequest):
     try:
-        result = optimize_schema(request.schema_text)
-        return {"recommendations": result}
+        result = await optimize_schema(request.schema_details)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
