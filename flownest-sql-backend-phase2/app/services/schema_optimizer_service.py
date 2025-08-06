@@ -1,28 +1,30 @@
 import os
 import httpx
+import json
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-async def optimize_schema(schema_description: str) -> dict:
+async def optimize_table_schema(table_schema: str) -> dict:
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
     }
 
     prompt = f"""
-You are a Database Schema Optimization Assistant.
-Given the following schema description, perform the following:
-1. Suggest improvements in normalization or indexing.
-2. Highlight any redundant columns or tables.
-3. Provide optimized schema recommendations.
+You are an expert SQL Database Schema Optimizer.
+Given the following table schema, perform these tasks:
+1. Analyze the schema and point out any inefficiencies.
+2. Recommend schema design improvements.
+3. Suggest indexes or normalization strategies if needed.
 
-Schema Description:
-{schema_description}
+Table Schema:
+{table_schema}
 
 Provide the response in the following JSON format:
 {{
-  "issues_found": "List of schema design problems",
-  "optimization_suggestions": "Recommendations for schema optimization"
+  "analysis": "Brief analysis of the current schema",
+  "recommendations": "Schema design improvements",
+  "indexing_suggestions": "Indexes or normalization strategies"
 }}
 """
 
@@ -45,13 +47,13 @@ Provide the response in the following JSON format:
     message_content = result["choices"][0]["message"]["content"]
 
     # Parse JSON response
-    import json
     try:
         response_dict = json.loads(message_content)
     except json.JSONDecodeError:
         response_dict = {
-            "issues_found": "Could not parse model response.",
-            "optimization_suggestions": "Manual review required.",
+            "analysis": "Could not parse schema analysis.",
+            "recommendations": "Manual review required.",
+            "indexing_suggestions": "No suggestions available.",
         }
 
     return response_dict
