@@ -1,12 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.services.execution_plan_service import analyze_execution_plan
+from app.schemas.plan_schema import ExecutionPlanRequest
 
 router = APIRouter()
 
-@router.post("/analyze-execution-plan")
-def execution_plan_endpoint(query: str):
-    try:
-        result = analyze_execution_plan(query)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/analyze-plan/")
+async def analyze_plan_route(request: ExecutionPlanRequest):
+    return await analyze_execution_plan(request.execution_plan)
