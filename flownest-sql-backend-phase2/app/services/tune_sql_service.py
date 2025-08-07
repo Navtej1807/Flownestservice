@@ -1,10 +1,19 @@
-# Existing SQL Tuner Logic Here
 import os
 import httpx
+import json
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 async def optimize_sql_query(input_query: str) -> dict:
+    # Debug: Print the API key (check Render logs to verify it's loading)
+    print(f"OPENROUTER_API_KEY: {OPENROUTER_API_KEY}")
+
+    if not OPENROUTER_API_KEY:
+        return {
+            "optimized_query": input_query,
+            "explanation": "Missing OpenRouter API key. Please set it in environment variables."
+        }
+
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
@@ -32,21 +41,27 @@ Provide the response in the following JSON format:
         "messages": [{"role": "user", "content": prompt}],
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers=headers,
-            json=data,
-            timeout=60
-        )
-        response.raise_for_status()
-        result = response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=60
+            )
+            response.raise_for_status()
+            result = response.json()
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error: {e.response.status_code} - {e.response.text}")
+        raise
+    except Exception as e:
+        print(f"General error during API call: {e}")
+        raise
 
-    # Extracting model's response
+    # Extract model's response content
     message_content = result["choices"][0]["message"]["content"]
 
-    # Parsing the JSON-like response text to dictionary
-    import json
+    # Try parsing JSON-like response from model
     try:
         response_dict = json.loads(message_content)
     except json.JSONDecodeError:
