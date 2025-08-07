@@ -3,6 +3,13 @@ import httpx
 import json
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+import logging
+
+logging.basicConfig(level=logging.INFO)
+if not OPENROUTER_API_KEY:
+    logging.error("OPENROUTER_API_KEY is not set in the environment!")
+else:
+    logging.info("✅ OPENROUTER_API_KEY loaded successfully.")
 
 async def optimize_sql_query(input_query: str) -> dict:
     # Debug: Print the API key (check Render logs to verify it's loading)
