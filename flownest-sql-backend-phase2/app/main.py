@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from schemas import (
+from app.schemas import (  # ✅ absolute package import
+
     SQLTuneRequest, SQLTuneResponse,
     SchemaOptimizationRequest, SchemaOptimizationResponse,
     PlanOptimizationRequest, PlanOptimizationResponse
