@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-class TuneSQLRequest(BaseModel):
-    sql_query: str
+class SQLTuneRequest(BaseModel):
+    sql_query: str  # Changed to sql_query for consistency
 
-class TuneSQLResponse(BaseModel):
-    optimized_sql: str
+class SQLTuneResponse(BaseModel):
+    optimized_query: str
     explanation: str

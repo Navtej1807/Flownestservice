@@ -1,16 +1,15 @@
-# app/schemas/schema_schema.py
 from pydantic import BaseModel
 from typing import List, Optional
 
 class TableSchema(BaseModel):
     table_name: str
-    columns: List[str]
+    columns: List[str]  # List of column names
     primary_keys: Optional[List[str]] = None
     indexes: Optional[List[str]] = None
 
-class SchemaRequest(BaseModel):  # <- renamed
+class SchemaOptimizationRequest(BaseModel):
     schema_description: str
     tables: List[TableSchema]
 
-class SchemaResponse(BaseModel):  # <- renamed
+class SchemaOptimizationResponse(BaseModel):
     suggestions: str
