@@ -1,9 +1,10 @@
 from fastapi import APIRouter
-from app.services.schema_optimize_service import optimize_schema
-from app.schemas.schema_schema import SchemaOptimizationRequest
+from app.schemas.schema_schema import SchemaRequest, SchemaResponse
+from app.services.schema_optimizer_service import optimize_table_schema
 
 router = APIRouter()
 
-@router.post("/schema-optimize/")
-async def schema_optimize_route(request: SchemaOptimizationRequest):
-    return await optimize_schema(request.schema_description)
+@router.post("/optimize-schema", response_model=SchemaResponse)
+async def optimize_schema(request: SchemaRequest):
+    response = await optimize_table_schema(request.table_schema)
+    return SchemaResponse(**response)
